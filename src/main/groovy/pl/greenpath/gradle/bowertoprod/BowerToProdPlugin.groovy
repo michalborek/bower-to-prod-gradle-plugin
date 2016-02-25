@@ -8,16 +8,14 @@ class BowerToProdPlugin implements Plugin<Project> {
 
   @Override
   void apply(Project project) {
-//    project.extensions.create('bowerToProd', BowerToProdExtension, project)
+    project.extensions.create('bowerToProd', BowerToProdExtension, project)
 
     project.task('copyBowerProductionDependencies') << {
-      println getBowerFilesDirectory(project)
-      getBowerDependencies(project).collect(copyProductionFiles(it, project))
+      String bowerComponentsDirectory = getBowerFilesDirectory(project)
+      getBowerDependencies(project).forEach({
+        new ProductionFilesCopier(it, bowerComponentsDirectory, project).copy()
+      })
     }
-  }
-
-  void copyProductionFiles(String library, Project project) {
-    // TODO check bower.json
   }
 
   private String getBowerFilesDirectory(Project project) {

@@ -11,8 +11,9 @@ import static pl.greenpath.gradle.bowertoprod.BuildscriptClasspathDefinitionGene
 class BowerToProdPluginFunctionalTest extends Specification {
 
   @Rule
-  public final TemporaryFolder testProjectDir = new TemporaryFolder();
-  private File buildFile;
+  final TemporaryFolder testProjectDir = new TemporaryFolder()
+
+  private File buildFile
 
   def setup() {
     File settingsFile = testProjectDir.newFile('settings.gradle')
@@ -21,18 +22,39 @@ class BowerToProdPluginFunctionalTest extends Specification {
     buildFile << generateBuildscriptClasspathDefinition()
     testProjectDir.newFile('.bowerrc') << getBowerrc()
     testProjectDir.newFile('bower.json') << getMainBowerJson()
+    testProjectDir.newFolder('app', 'components', 'almond')
+    testProjectDir.newFile('app/components/almond/bower.json') << getLibBowerJson()
+    buildFile << '''
+        apply plugin: 'pl.greenpath.gradle.bowertoprod'
+
+        bowerToProd {
+          destinationDir file('.')
+        }
+    '''
   }
 
   def 'should apply a plugin and add copy task'() {
-    given:
-    buildFile << '''
-        apply plugin: 'pl.greenpath.gradle.bowertoprod'
-    '''
+
     when:
     BuildResult result = GradleRunner.create()
         .withProjectDir(testProjectDir.root)
         .withArguments('copyBowerProductionDependencies', '--stacktrace')
         .build()
+    then:
+    println result.output
+  }
+
+  def 'should allow defining customizations'() {
+    given:
+    buildFile << '''
+        bowerToProd {
+          lib name: 'angular', buildDir: 'build', includes: ['angular.js']
+        }
+    '''
+    when:
+    BuildResult result = GradleRunner.create()
+        .withProjectDir(testProjectDir.root)
+        .withArguments('copyBowerProductionDependencies')
     then:
     println result.output
   }
@@ -49,15 +71,19 @@ class BowerToProdPluginFunctionalTest extends Specification {
     '''
       {
        "dependencies": {
-         "spoonjs": "*",
-         "requirejs": "~2.1.2",
-         "requirejs-text": "~2.0.3",
-         "require-css": "*",
          "almond": "~0.2.1"
         }
       }
     '''
 
+  }
+
+  private static String getLibBowerJson() {
+    return '''
+      {
+       "main": ["./build/a.js", "build/b.js"]
+      }
+    '''
   }
 
 }

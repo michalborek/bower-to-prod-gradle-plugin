@@ -28,13 +28,38 @@ class BowerToProdPluginFunctionalTest extends Specification {
         apply plugin: 'pl.greenpath.gradle.bowertoprod'
 
         bowerToProd {
-          destinationDir file('.')
+          destination file('dest')
         }
     '''
   }
 
-  def 'should apply a plugin and add copy task'() {
+  def 'should copy files defined as main files'() {
+    given:
+    testProjectDir.newFolder('app', 'components', 'almond', 'build')
+    testProjectDir.newFile('app/components/almond/build/a.js')
+    testProjectDir.newFile('app/components/almond/build/b.js')
+    when:
+    BuildResult result = GradleRunner.create()
+        .withProjectDir(testProjectDir.root)
+        .withArguments('copyBowerProductionDependencies', '--stacktrace')
+        .build()
+    then:
+    new File(testProjectDir.getRoot(), 'dest/almond/build/a.js').exists()
+    new File(testProjectDir.getRoot(), 'dest/almond/build/b.js').exists()
+  }
 
+  def 'should strip build dir if build dir defined in extension'() {
+    given:
+    buildFile << '''
+        apply plugin: 'pl.greenpath.gradle.bowertoprod'
+
+        bowerToProd {
+          lib name: 'almond', buildDir: 'build'
+        }
+    '''
+    testProjectDir.newFolder('app', 'components', 'almond', 'build')
+    testProjectDir.newFile('app/components/almond/build/a.js')
+    testProjectDir.newFile('app/components/almond/build/b.js')
     when:
     BuildResult result = GradleRunner.create()
         .withProjectDir(testProjectDir.root)
@@ -42,6 +67,8 @@ class BowerToProdPluginFunctionalTest extends Specification {
         .build()
     then:
     println result.output
+    new File(testProjectDir.getRoot(), 'dest/almond/a.js').exists()
+    new File(testProjectDir.getRoot(), 'dest/almond/b.js').exists()
   }
 
   def 'should allow defining customizations'() {
@@ -55,6 +82,7 @@ class BowerToProdPluginFunctionalTest extends Specification {
     BuildResult result = GradleRunner.create()
         .withProjectDir(testProjectDir.root)
         .withArguments('copyBowerProductionDependencies')
+        .build()
     then:
     println result.output
   }

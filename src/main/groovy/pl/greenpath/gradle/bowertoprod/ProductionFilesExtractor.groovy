@@ -15,8 +15,10 @@ class ProductionFilesExtractor {
     this.libraryPath = libraryPath
   }
 
-  public List<String> getProductionFiles() {
+  public List<String> getProductionFiles(String buildDir = '') {
     File bowerJsonFile = project.file(libraryPath + BOWER_JSON_RELATIVE_PATH)
-    return new JsonSlurper().parse(bowerJsonFile)['main']
+
+    List<String> productionFiles = new JsonSlurper().parse(bowerJsonFile)['main']
+    return productionFiles*.replaceAll("^(\\./)?${buildDir}(/)?", '')
   }
 }

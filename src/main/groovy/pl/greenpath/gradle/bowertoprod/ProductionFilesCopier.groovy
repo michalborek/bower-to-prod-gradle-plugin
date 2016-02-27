@@ -19,19 +19,27 @@ class ProductionFilesCopier {
   void copy() {
     List<String> filesToCopy = getFilesToCopy()
     String libraryPath = getLibraryPath()
+    String buildDir = bowerToProdExtension.getBuildDirPath(libraryName)
     new AntBuilder().copy(todir: getDestinationPath()) {
-      fileset(dir: libraryPath) {
-        include filesToCopy
+      fileset(dir: new File(project.file(libraryPath), buildDir)) {
+        for (String path : filesToCopy) {
+          include(name: path)
+        }
       }
     }
   }
 
   private List<String> getFilesToCopy() {
-    if (hasCustomization()) {
-      return bowerToProdExtension.getCustomization(libraryName).getCustomFiles()
-    } else {
-      return new ProductionFilesExtractor(getLibraryPath(), project).getProductionFiles()
+    ProductionFilesExtractor filesExtractor = new ProductionFilesExtractor(getLibraryPath(), project)
+    if (!hasCustomization()) {
+      return filesExtractor.getProductionFiles()
     }
+    LibraryDefinition customization = bowerToProdExtension.getCustomization(libraryName)
+    if (customization.customFiles.empty) {
+      return filesExtractor.getProductionFiles(customization.getBuildDir())
+    }
+    return customization.getCustomFiles()
+
   }
 
   private boolean hasCustomization() {
@@ -39,11 +47,11 @@ class ProductionFilesCopier {
   }
 
   private String getLibraryPath() {
-    bowerComponentsPath + '/' + libraryName + '/'
+    return bowerComponentsPath + '/' + libraryName + '/'
   }
 
   private String getDestinationPath() {
-    bowerToProdExtension.destinationDir.absolutePath + '/' + libraryName
+    return new File(bowerToProdExtension.destinationDir, libraryName).absolutePath
   }
 
 }

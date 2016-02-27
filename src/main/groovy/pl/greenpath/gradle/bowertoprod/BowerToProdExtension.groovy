@@ -26,4 +26,12 @@ class BowerToProdExtension {
   LibraryDefinition getCustomization(String libraryName) {
     return customizations[libraryName]
   }
+
+  String getBuildDirPath(String libraryName) {
+    if (!customizations.containsKey(libraryName)) {
+      return ''
+    } else {
+      return customizations[libraryName].buildDir ?: ''
+    }
+  }
 }

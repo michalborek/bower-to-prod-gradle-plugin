@@ -6,9 +6,9 @@
 
 A gradle plugin that copies only production files of bower dependencis into desired directory.
  
-This plugin uses .bowerrc to determine the bower_components directory.
+This plugin uses *.bowerrc* to determine the *bower_components* directory.
 
-It automatically copies all files defined in 'main' section in a bower.json of each dependency.
+It automatically copies all files defined in *'main'* section in a *bower.json* of each dependency.
 
 When you want to want to customize certain dependency, use *bowerToProd* declaration:
 

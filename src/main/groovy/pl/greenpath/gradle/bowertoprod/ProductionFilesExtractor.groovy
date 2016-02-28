@@ -18,7 +18,9 @@ class ProductionFilesExtractor {
   public List<String> getProductionFiles(String buildDir = '') {
     File bowerJsonFile = project.file(libraryPath + BOWER_JSON_RELATIVE_PATH)
 
-    List<String> productionFiles = new JsonSlurper().parse(bowerJsonFile)['main']
+    def mainDefinition = new JsonSlurper().parse(bowerJsonFile)['main']
+    List<String> productionFiles = mainDefinition instanceof String ? [mainDefinition] : mainDefinition
+
     return productionFiles*.replaceAll("^(\\./)?${buildDir}(/)?", '')
   }
 }

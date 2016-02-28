@@ -18,22 +18,30 @@ class ProductionFilesExtractorFunctionalTest extends Specification {
   def setup() {
     project = ProjectBuilder.builder().build()
     project.setBuildDir(testProjectDir.root)
-    testProjectDir.newFile('bower.json') << getBowerJson()
   }
 
   def 'should extract production files from bower.json removing ./ if present'() {
     given:
+    testProjectDir.newFile('bower.json') << getBowerJson('["./build/a.js", "build/b.js"]')
     ProductionFilesExtractor extractor = new ProductionFilesExtractor(testProjectDir.root.absolutePath + '/', project)
     expect:
     extractor.getProductionFiles() == ['build/a.js', 'build/b.js']
+  }
+
+  def 'should extract production files from bower.json when only one file exists'() {
+    given:
+    testProjectDir.newFile('bower.json') << getBowerJson('"./build/a.js"')
+    ProductionFilesExtractor extractor = new ProductionFilesExtractor(testProjectDir.root.absolutePath + '/', project)
+    expect:
+    extractor.getProductionFiles() == ['build/a.js']
 
   }
 
-  private static String getBowerJson() {
-    '''
+  private static String getBowerJson(String files) {
+    """
       {
-       "main": ["./build/a.js", "build/b.js"]
+       "main": ${files}
       }
-    '''
+    """
   }
 }

@@ -5,7 +5,7 @@ buildscript {
     }
   }
   dependencies {
-    classpath 'com.gradle.publish:plugin-publish-plugin:0.9.1'
+    classpath 'com.gradle.publish:plugin-publish-plugin:0.9.3'
   }
 }
 
@@ -44,13 +44,15 @@ group = 'pl.greenpath.gradle'
 pluginBundle {
   website = 'https://github.com/michalborek/bower-to-prod-gradle-plugin'
   vcsUrl = 'https://github.com/michalborek/bower-to-prod-gradle-plugin'
-  description = 'Docker to production gradle plugin'
+  description = '''Bower to production gradle plugin copies only production files to desired directory.
+                   It skips all the samples, README files and so on. Production files are recognized by 'main' section
+                   in bower.json or by custom definition'''
   tags = ['bower', 'javascript']
 
   plugins {
     greetingsPlugin {
       id = 'pl.greenpath.gradle.bowertoprod'
-      displayName = 'Docker to production gradle plugin'
+      displayName = 'Bower to production gradle plugin'
     }
   }
 }

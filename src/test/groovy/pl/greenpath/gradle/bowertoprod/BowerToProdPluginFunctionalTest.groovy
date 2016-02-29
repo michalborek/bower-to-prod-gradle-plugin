@@ -1,6 +1,5 @@
 package pl.greenpath.gradle.bowertoprod
 
-import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
@@ -23,7 +22,10 @@ class BowerToProdPluginFunctionalTest extends Specification {
     testProjectDir.newFile('.bowerrc') << getBowerrc()
     testProjectDir.newFile('bower.json') << getMainBowerJson()
     testProjectDir.newFolder('app', 'components', 'almond')
-    testProjectDir.newFile('app/components/almond/bower.json') << getLibBowerJson()
+    testProjectDir.newFolder('app', 'components', 'test')
+    testProjectDir.newFile('app/components/almond/bower.json') << getLibBowerJson('["./build/a.js", "build/b.js"]')
+    testProjectDir.newFile('app/components/test/bower.json') << getLibBowerJson('"a.js"')
+    testProjectDir.newFile('app/components/test/a.js') << 'dummy'
     buildFile << '''
         apply plugin: 'pl.greenpath.gradle.bowertoprod'
 
@@ -39,13 +41,14 @@ class BowerToProdPluginFunctionalTest extends Specification {
     testProjectDir.newFile('app/components/almond/build/a.js')
     testProjectDir.newFile('app/components/almond/build/b.js')
     when:
-    BuildResult result = GradleRunner.create()
+    GradleRunner.create()
         .withProjectDir(testProjectDir.root)
         .withArguments('copyBowerProductionDependencies', '--stacktrace')
         .build()
     then:
     new File(testProjectDir.getRoot(), 'dest/almond/build/a.js').exists()
     new File(testProjectDir.getRoot(), 'dest/almond/build/b.js').exists()
+    new File(testProjectDir.getRoot(), 'dest/test/a.js').exists()
   }
 
   def 'should strip build dir if build dir defined in extension'() {
@@ -61,30 +64,35 @@ class BowerToProdPluginFunctionalTest extends Specification {
     testProjectDir.newFile('app/components/almond/build/a.js')
     testProjectDir.newFile('app/components/almond/build/b.js')
     when:
-    BuildResult result = GradleRunner.create()
+    GradleRunner.create()
         .withProjectDir(testProjectDir.root)
         .withArguments('copyBowerProductionDependencies', '--stacktrace')
         .build()
     then:
-    println result.output
     new File(testProjectDir.getRoot(), 'dest/almond/a.js').exists()
     new File(testProjectDir.getRoot(), 'dest/almond/b.js').exists()
+    new File(testProjectDir.getRoot(), 'dest/test/a.js').exists()
   }
 
-  def 'should allow defining customizations'() {
+  def 'should not copy dependencies defined as ignored'() {
     given:
+    testProjectDir.newFolder('app', 'components', 'almond', 'build')
+    testProjectDir.newFile('app/components/almond/build/a.js')
+    testProjectDir.newFile('app/components/almond/build/b.js')
     buildFile << '''
         bowerToProd {
-          lib name: 'angular', buildDir: 'build', includes: ['angular.js']
+          ignore 'test'
         }
     '''
     when:
-    BuildResult result = GradleRunner.create()
+    GradleRunner.create()
         .withProjectDir(testProjectDir.root)
         .withArguments('copyBowerProductionDependencies')
         .build()
     then:
-    println result.output
+    new File(testProjectDir.getRoot(), 'dest/almond/build/a.js').exists()
+    new File(testProjectDir.getRoot(), 'dest/almond/build/b.js').exists()
+    new File(testProjectDir.getRoot(), 'dest/test/a.js').exists() == false
   }
 
   private static String getBowerrc() {
@@ -99,19 +107,20 @@ class BowerToProdPluginFunctionalTest extends Specification {
     '''
       {
        "dependencies": {
-         "almond": "~0.2.1"
+         "almond": "~0.2.1",
+         "test": "1.1.1"
         }
       }
     '''
 
   }
 
-  private static String getLibBowerJson() {
-    return '''
+  private static String getLibBowerJson(String mainFiles) {
+    return """
       {
-       "main": ["./build/a.js", "build/b.js"]
+       "main": ${mainFiles}
       }
-    '''
+    """
   }
 
 }

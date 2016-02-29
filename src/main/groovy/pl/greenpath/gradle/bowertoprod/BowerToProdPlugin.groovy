@@ -8,13 +8,16 @@ class BowerToProdPlugin implements Plugin<Project> {
 
   @Override
   void apply(Project project) {
-    project.extensions.create('bowerToProd', BowerToProdExtension, project)
+    BowerToProdExtension bowerToProdExtension = project.extensions.create('bowerToProd', BowerToProdExtension, project)
 
     project.task('copyBowerProductionDependencies') << {
       String bowerComponentsDirectory = getBowerFilesDirectory(project)
-      getBowerDependencies(project).forEach({
-        new ProductionFilesCopier(it, bowerComponentsDirectory, project).copy()
-      })
+      ProductionFilesCopier copier = new ProductionFilesCopier(bowerComponentsDirectory, project)
+      getBowerDependencies(project).findAll {
+        !bowerToProdExtension.isIgnored(it)
+      }.forEach {
+        copier.copy(it)
+      }
     }
   }
 
@@ -36,4 +39,5 @@ class BowerToProdPlugin implements Plugin<Project> {
     Map dependencies = new JsonSlurper().parse(file)['dependencies']
     return dependencies.keySet().toList()
   }
+
 }

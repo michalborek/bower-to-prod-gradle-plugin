@@ -4,9 +4,11 @@ import org.gradle.api.Project
 
 class BowerToProdExtension {
 
-  File destinationDir
+  private File destinationDir
 
   private Map<String, LibraryDefinition> customizations = [:]
+
+  private List<String> ignored = []
 
   BowerToProdExtension(Project project) {
   }
@@ -15,16 +17,24 @@ class BowerToProdExtension {
     customizations[params['name']] = new LibraryDefinition(params)
   }
 
+  void ignore(String... ignoredDependencies) {
+    ignored += ignoredDependencies.toList()
+  }
+
   void destination(File destinationDir) {
     this.destinationDir = destinationDir
   }
 
-  Map<String, LibraryDefinition> getCustomizations() {
-    return customizations
+  boolean hasCustomization(String libraryName) {
+    return customizations.containsKey(libraryName)
   }
 
   LibraryDefinition getCustomization(String libraryName) {
     return customizations[libraryName]
+  }
+
+  File getDestination() {
+    return destinationDir
   }
 
   String getBuildDirPath(String libraryName) {
@@ -33,5 +43,9 @@ class BowerToProdExtension {
     } else {
       return customizations[libraryName].buildDir ?: ''
     }
+  }
+
+  boolean isIgnored(String dependency) {
+    return ignored.contains(dependency)
   }
 }

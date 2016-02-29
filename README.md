@@ -15,5 +15,11 @@ When you want to want to customize certain dependency, use *bowerToProd* declara
     bowerToProd {
       destination file('dest') // where to put production files, additionally lib name will be appended
       lib name: 'almond', buildDir: 'build' // indicate dhat for almond dep you want to strip 'build' file in destination directory
-      lib name: 'almond', buildDir: 'build', includes: ['./build/a.js'] // ignore the 'main' section in bower.json and copy only a.js 
+      lib name: 'almond', buildDir: 'build', includes: ['./build/a.js'] // ignore the 'main' section in bower.json and copy only a.js
+      ignore 'angular', 'moment'
     }
+
+
+To execute task run:
+
+```./gradlew copyBowerProductionDependencies```

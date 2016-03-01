@@ -18,12 +18,12 @@ class ProductionFilesCopier {
     List<String> filesToCopy = getFilesToCopy(libraryName)
     String libraryPath = getLibraryPath(libraryName)
     String buildDir = bowerToProdExtension.getBuildDirPath(libraryName)
-    String destination = getDestinationPath(libraryName)
+    File destinationDirectory = getDestination(libraryName)
     File sourcesDirectory = new File(project.file(libraryPath), buildDir)
-    doCopy(destination, sourcesDirectory, filesToCopy)
+    doCopy(destinationDirectory, sourcesDirectory, filesToCopy)
   }
 
-  private void doCopy(String destination, File sourcesDirectory, List<String> filesToCopy) {
+  private void doCopy(File destination, File sourcesDirectory, List<String> filesToCopy) {
     new AntBuilder().copy(todir: destination) {
       fileset(dir: sourcesDirectory) {
         for (String path : filesToCopy) {
@@ -50,8 +50,13 @@ class ProductionFilesCopier {
     return bowerComponentsPath + '/' + libraryName + '/'
   }
 
-  private String getDestinationPath(String libraryName) {
-    return new File(bowerToProdExtension.destination, libraryName).absolutePath
+  private File getDestination(String libraryName) {
+    LibraryDefinition customization = bowerToProdExtension.getCustomization(libraryName)
+    if (customization != null && customization.destination != null) {
+      return project.file(customization.destination)
+    }
+
+    return new File(bowerToProdExtension.destination, libraryName)
   }
 
 }

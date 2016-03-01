@@ -20,7 +20,6 @@ class ProductionFilesExtractor {
 
     def mainDefinition = new JsonSlurper().parse(bowerJsonFile)['main']
     List<String> productionFiles = mainDefinition instanceof String ? [mainDefinition] : mainDefinition
-
-    return productionFiles*.replaceAll("^(\\./)?${buildDir}(/)?", '')
+    return productionFiles*.replaceAll("^(\\./)?${buildDir ?: ''}(/)?", '')
   }
 }

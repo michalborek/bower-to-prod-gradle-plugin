@@ -3,6 +3,7 @@ package pl.greenpath.gradle.bowertoprod
 class LibraryDefinition {
   String name
   String buildDir
+  String destination
 
   private List<String> includes = []
 
@@ -13,6 +14,7 @@ class LibraryDefinition {
   void setIncludes(List<String> includes) {
     this.includes.addAll(includes)
   }
+
 
   public List<String> getCustomFiles() {
     return includes*.replaceAll("^(\\./)?${buildDir}(/)?", '')

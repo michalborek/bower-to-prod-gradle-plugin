@@ -12,6 +12,7 @@ import static pl.greenpath.gradle.bowertoprod.BuildscriptClasspathDefinitionGene
 class BowerToProdPluginFunctionalTest extends Specification {
 
   public static final String COPY_TASK_NAME = ':copyBowerProductionDependencies'
+
   @Rule
   final TemporaryFolder testProjectDir = new TemporaryFolder()
 
@@ -49,6 +50,25 @@ class BowerToProdPluginFunctionalTest extends Specification {
     new File(testProjectDir.getRoot(), 'dest/almond/build/a.js').exists()
     new File(testProjectDir.getRoot(), 'dest/almond/build/b.js').exists()
     new File(testProjectDir.getRoot(), 'dest/test/a.js').exists()
+  }
+
+  def 'should copy files defined to custom destination'() {
+    given:
+    testProjectDir.newFolder('app', 'components', 'almond', 'build')
+    testProjectDir.newFile('app/components/almond/build/a.js')
+    testProjectDir.newFile('app/components/almond/build/b.js')
+    buildFile << '''
+        bowerToProd {
+          lib name: 'almond', destination: 'test'
+        }
+    '''
+    when:
+    runTask()
+    then:
+    new File(testProjectDir.getRoot(), 'test/build/a.js').exists()
+    new File(testProjectDir.getRoot(), 'test/build/b.js').exists()
+    new File(testProjectDir.getRoot(), 'dest/almond/build/a.js').exists() == false
+    new File(testProjectDir.getRoot(), 'dest/almond/build/b.js').exists() == false
   }
 
   def 'should skip consecutive builds, when nothing changed'() {

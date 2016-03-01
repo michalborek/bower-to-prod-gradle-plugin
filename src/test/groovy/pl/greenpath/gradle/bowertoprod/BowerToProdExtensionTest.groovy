@@ -12,12 +12,13 @@ class BowerToProdExtensionTest extends Specification {
 
   def 'should store customizations for given files'() {
     when:
-    extension.lib name: 'angular', buildDir: 'build', includes: ['angular.js']
+    extension.lib name: 'angular', buildDir: 'build', includes: ['angular.js'], destination: 'dest'
     then:
     LibraryDefinition angularLib = extension.getCustomization('angular')
-    angularLib.getName() == 'angular'
-    angularLib.getBuildDir() == 'build'
-    angularLib.getIncludes() == ['angular.js']
+    angularLib.name == 'angular'
+    angularLib.buildDir == 'build'
+    angularLib.includes == ['angular.js']
+    angularLib.destination == 'dest'
   }
 
   def 'should store ignored dependencies'() {

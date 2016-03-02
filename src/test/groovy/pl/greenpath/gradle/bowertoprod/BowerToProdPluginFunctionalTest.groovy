@@ -41,51 +41,64 @@ class BowerToProdPluginFunctionalTest extends Specification {
 
   def 'should copy files defined as main files'() {
     given:
-    testProjectDir.newFolder('app', 'components', 'almond', 'build')
-    testProjectDir.newFile('app/components/almond/build/a.js')
-    testProjectDir.newFile('app/components/almond/build/b.js')
+    createAlmodDirectory()
     when:
     runTask()
     then:
-    new File(testProjectDir.getRoot(), 'dest/almond/build/a.js').exists()
-    new File(testProjectDir.getRoot(), 'dest/almond/build/b.js').exists()
-    new File(testProjectDir.getRoot(), 'dest/test/a.js').exists()
+    fileExists('dest/almond/build/a.js')
+    fileExists('dest/almond/build/b.js')
+    fileExists('dest/test/a.js')
   }
 
   def 'should copy files defined to custom destination'() {
     given:
-    testProjectDir.newFolder('app', 'components', 'almond', 'build')
-    testProjectDir.newFile('app/components/almond/build/a.js')
-    testProjectDir.newFile('app/components/almond/build/b.js')
+    createAlmodDirectory()
     buildFile << '''
         bowerToProd {
           lib name: 'almond', destination: 'test'
         }
     '''
     when:
-    runTask()
+    BuildResult buildResult = runTask()
     then:
-    new File(testProjectDir.getRoot(), 'test/build/a.js').exists()
-    new File(testProjectDir.getRoot(), 'test/build/b.js').exists()
-    new File(testProjectDir.getRoot(), 'dest/almond/build/a.js').exists() == false
-    new File(testProjectDir.getRoot(), 'dest/almond/build/b.js').exists() == false
+    taskWasExecuted(buildResult)
+    fileExists('test/build/a.js')
+    fileExists('test/build/b.js')
+    !fileExists('dest/almond/build/a.js')
+    !fileExists('dest/almond/build/b.js')
   }
 
   def 'should skip consecutive builds, when nothing changed'() {
     given:
-    testProjectDir.newFolder('app', 'components', 'almond', 'build')
-    testProjectDir.newFile('app/components/almond/build/a.js')
-    testProjectDir.newFile('app/components/almond/build/b.js')
+    createAlmodDirectory()
     when:
     BuildResult firstBuild = runTask()
     BuildResult secondBuild = runTask()
     then:
-    firstBuild.task(COPY_TASK_NAME).outcome == TaskOutcome.SUCCESS
-    secondBuild.task(COPY_TASK_NAME).outcome == TaskOutcome.UP_TO_DATE
+    taskWasExecuted(firstBuild)
+    taskWasUpToDate(secondBuild)
+  }
+
+  def 'should not skip consecutive builds when custom destination changed between them'() {
+    given:
+    createAlmodDirectory()
+    buildFile << '''
+        bowerToProd {
+          lib name: 'almond', destination: 'test'
+        }
+    '''
+    when:
+    BuildResult firstBuild = runTask()
+    deleteCustomDestination()
+    BuildResult secondBuild = runTask()
+    then:
+    taskWasExecuted(firstBuild)
+    taskWasExecuted(secondBuild)
   }
 
   def 'should strip build dir if build dir defined in extension'() {
     given:
+    createAlmodDirectory()
     buildFile << '''
         apply plugin: 'pl.greenpath.gradle.bowertoprod'
 
@@ -93,34 +106,54 @@ class BowerToProdPluginFunctionalTest extends Specification {
           lib name: 'almond', buildDir: 'build'
         }
     '''
-    testProjectDir.newFolder('app', 'components', 'almond', 'build')
-    testProjectDir.newFile('app/components/almond/build/a.js')
-    testProjectDir.newFile('app/components/almond/build/b.js')
     when:
-    runTask()
+    BuildResult buildResult = runTask()
     then:
-    new File(testProjectDir.getRoot(), 'dest/almond/a.js').exists()
-    new File(testProjectDir.getRoot(), 'dest/almond/b.js').exists()
-    new File(testProjectDir.getRoot(), 'dest/test/a.js').exists()
+    taskWasExecuted(buildResult)
+    fileExists('dest/almond/a.js')
+    fileExists('dest/almond/b.js')
+    fileExists('dest/test/a.js')
   }
 
 
   def 'should not copy dependencies defined as ignored'() {
     given:
-    testProjectDir.newFolder('app', 'components', 'almond', 'build')
-    testProjectDir.newFile('app/components/almond/build/a.js')
-    testProjectDir.newFile('app/components/almond/build/b.js')
+    createAlmodDirectory()
     buildFile << '''
         bowerToProd {
           ignore 'test'
         }
     '''
     when:
-    runTask()
+    BuildResult buildResult = runTask()
     then:
-    new File(testProjectDir.getRoot(), 'dest/almond/build/a.js').exists()
-    new File(testProjectDir.getRoot(), 'dest/almond/build/b.js').exists()
-    new File(testProjectDir.getRoot(), 'dest/test/a.js').exists() == false
+    taskWasExecuted(buildResult)
+    fileExists('dest/almond/build/a.js')
+    fileExists('dest/almond/build/b.js')
+    !fileExists('dest/test/a.js')
+  }
+
+  private void createAlmodDirectory() {
+    testProjectDir.newFolder('app', 'components', 'almond', 'build')
+    testProjectDir.newFile('app/components/almond/build/b.js')
+    testProjectDir.newFile('app/components/almond/build/a.js')
+  }
+
+  private boolean taskWasExecuted(BuildResult buildResult) {
+    return buildResult.task(COPY_TASK_NAME).outcome == TaskOutcome.SUCCESS
+  }
+
+  private boolean fileExists(String projectRelativeFilePath) {
+    new File(testProjectDir.getRoot(), projectRelativeFilePath).exists()
+  }
+
+  private boolean taskWasUpToDate(BuildResult secondBuild) {
+    return secondBuild.task(COPY_TASK_NAME).outcome == TaskOutcome.UP_TO_DATE
+  }
+
+
+  private boolean deleteCustomDestination() {
+    new File(testProjectDir.getRoot(), 'test').deleteDir()
   }
 
   private BuildResult runTask() {

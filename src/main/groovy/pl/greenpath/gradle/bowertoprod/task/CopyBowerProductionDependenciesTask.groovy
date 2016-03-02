@@ -18,7 +18,7 @@ class CopyBowerProductionDependenciesTask extends DefaultTask {
 
     project.afterEvaluate {
       inputs.dir project.file(getBowerFilesDirectory(project))
-      println project.file(getBowerFilesDirectory(project))
+      bowerToProdExtension.getCustomDestinations().forEach { outputs.dir it }
       outputs.dir bowerToProdExtension.destination
     }
   }

@@ -4,6 +4,8 @@ import org.gradle.api.Project
 
 class BowerToProdExtension {
 
+  Project project
+
   private File destinationDir
 
   private Map<String, LibraryDefinition> customizations = [:]
@@ -11,6 +13,7 @@ class BowerToProdExtension {
   private List<String> ignored = []
 
   BowerToProdExtension(Project project) {
+    this.project = project
   }
 
   void lib(Map params) {
@@ -42,6 +45,14 @@ class BowerToProdExtension {
       return ''
     } else {
       return customizations[libraryName].buildDir ?: ''
+    }
+  }
+
+  List<String> getCustomDestinations() {
+    return customizations.values().collect {
+      it.getDestination()
+    }.findAll {
+      it != null && !it.empty
     }
   }
 

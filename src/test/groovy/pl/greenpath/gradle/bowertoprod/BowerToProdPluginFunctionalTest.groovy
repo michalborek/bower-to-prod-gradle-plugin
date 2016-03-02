@@ -115,7 +115,6 @@ class BowerToProdPluginFunctionalTest extends Specification {
     fileExists('dest/test/a.js')
   }
 
-
   def 'should not copy dependencies defined as ignored'() {
     given:
     createAlmodDirectory()

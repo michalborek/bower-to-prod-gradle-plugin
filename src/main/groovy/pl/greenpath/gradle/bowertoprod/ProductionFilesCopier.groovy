@@ -1,5 +1,6 @@
 package pl.greenpath.gradle.bowertoprod
 
+import org.apache.commons.lang.StringUtils
 import org.gradle.api.Project
 
 class ProductionFilesCopier {
@@ -14,16 +15,33 @@ class ProductionFilesCopier {
     bowerToProdExtension = project.getExtensions().getByType(BowerToProdExtension)
   }
 
-  void copy(String libraryName) {
+  void copy(final String libraryName) {
     List<String> filesToCopy = getFilesToCopy(libraryName)
     String libraryPath = getLibraryPath(libraryName)
     String buildDir = bowerToProdExtension.getBuildDirPath(libraryName)
     File destinationDirectory = getDestination(libraryName)
     File sourcesDirectory = new File(project.file(libraryPath), buildDir)
+    (sourcesDirectory, filesToCopy) = stripCommonPrefixDirectory(sourcesDirectory, filesToCopy)
     doCopy(destinationDirectory, sourcesDirectory, filesToCopy)
   }
 
-  private void doCopy(File destination, File sourcesDirectory, List<String> filesToCopy) {
+  private Tuple2<File, List<String>> stripCommonPrefixDirectory(File sourcesDirectory, List<String> filesToCopy) {
+    if (filesToCopy.size() > 1) {
+      String commonPrefix = StringUtils.getCommonPrefix(filesToCopy.toArray(new String[filesToCopy.size()]))
+      if (!commonPrefix.isEmpty()) {
+        return [new File(sourcesDirectory, commonPrefix),
+                filesToCopy.collect { StringUtils.removeStart(it, commonPrefix) }]
+      }
+    } else if (filesToCopy.size() == 1) {
+      File fileToCopy = new File(sourcesDirectory, filesToCopy.first())
+      if (fileToCopy.exists()) {
+        return [fileToCopy.parentFile, [fileToCopy.getName()]]
+      }
+    }
+    return [sourcesDirectory, filesToCopy]
+  }
+
+  private void doCopy(final File destination, final File sourcesDirectory, final List<String> filesToCopy) {
     new AntBuilder().copy(todir: destination) {
       fileset(dir: sourcesDirectory) {
         for (String path : filesToCopy) {

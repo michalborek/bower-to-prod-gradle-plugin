@@ -26,10 +26,10 @@ class BowerToProdPluginFunctionalTest extends Specification {
     testProjectDir.newFile('.bowerrc') << getBowerrc()
     testProjectDir.newFile('bower.json') << getMainBowerJson()
     testProjectDir.newFolder('app', 'components', 'almond')
-    testProjectDir.newFolder('app', 'components', 'test')
+    testProjectDir.newFolder('app', 'components', 'test', 'release')
     testProjectDir.newFile('app/components/almond/bower.json') << getLibBowerJson('["./build/a.js", "build/b.js"]')
-    testProjectDir.newFile('app/components/test/bower.json') << getLibBowerJson('"a.js"')
-    testProjectDir.newFile('app/components/test/a.js') << 'dummy'
+    testProjectDir.newFile('app/components/test/bower.json') << getLibBowerJson('"release/a.js"')
+    testProjectDir.newFile('app/components/test/release/a.js') << 'dummy'
     buildFile << '''
         apply plugin: 'pl.greenpath.gradle.bowertoprod'
 
@@ -39,14 +39,14 @@ class BowerToProdPluginFunctionalTest extends Specification {
     '''
   }
 
-  def 'should copy files defined as main files'() {
+  def 'should copy files defined as main files, skipping common directory prefix'() {
     given:
     createAlmodDirectory()
     when:
     runTask()
     then:
-    fileExists('dest/almond/build/a.js')
-    fileExists('dest/almond/build/b.js')
+    fileExists('dest/almond/a.js')
+    fileExists('dest/almond/b.js')
     fileExists('dest/test/a.js')
   }
 
@@ -62,10 +62,8 @@ class BowerToProdPluginFunctionalTest extends Specification {
     BuildResult buildResult = runTask()
     then:
     taskWasExecuted(buildResult)
-    fileExists('test/build/a.js')
-    fileExists('test/build/b.js')
-    !fileExists('dest/almond/build/a.js')
-    !fileExists('dest/almond/build/b.js')
+    fileExists('test/a.js')
+    fileExists('test/b.js')
   }
 
   def 'should skip consecutive builds, when nothing changed'() {
@@ -127,8 +125,8 @@ class BowerToProdPluginFunctionalTest extends Specification {
     BuildResult buildResult = runTask()
     then:
     taskWasExecuted(buildResult)
-    fileExists('dest/almond/build/a.js')
-    fileExists('dest/almond/build/b.js')
+    fileExists('dest/almond/a.js')
+    fileExists('dest/almond/b.js')
     !fileExists('dest/test/a.js')
   }
 

@@ -39,7 +39,7 @@ dependencies {
   testRuntime files(createClasspathManifest)
 }
 
-version = '0.1.6'
+version = '0.1.7'
 group = 'pl.greenpath.gradle'
 
 pluginBundle {

@@ -25,20 +25,25 @@ class ProductionFilesCopier {
     doCopy(destinationDirectory, sourcesDirectory, filesToCopy)
   }
 
-  private Tuple2<File, List<String>> stripCommonPrefixDirectory(File sourcesDirectory, List<String> filesToCopy) {
-    if (filesToCopy.size() > 1) {
-      String commonPrefix = StringUtils.getCommonPrefix(filesToCopy.toArray(new String[filesToCopy.size()]))
+  private Tuple2<File, List<String>> stripCommonPrefixDirectory(File sourcesDirectory, List<String> filesPahtsToCopy) {
+    List<String> parentDirectoriesToCopy = filesPahtsToCopy.collect {
+      URI parentDirectoryUri = new File(sourcesDirectory, it).getParentFile().toURI()
+      sourcesDirectory.toURI().relativize(parentDirectoryUri).getPath()
+    }
+
+    if (filesPahtsToCopy.size() > 1) {
+      String commonPrefix = StringUtils.getCommonPrefix(parentDirectoriesToCopy.toArray(new String[parentDirectoriesToCopy.size()]))
       if (!commonPrefix.isEmpty()) {
         return [new File(sourcesDirectory, commonPrefix),
-                filesToCopy.collect { StringUtils.removeStart(it, commonPrefix) }]
+                filesPahtsToCopy.collect { StringUtils.removeStart(it, commonPrefix) }]
       }
-    } else if (filesToCopy.size() == 1) {
-      File fileToCopy = new File(sourcesDirectory, filesToCopy.first())
+    } else if (filesPahtsToCopy.size() == 1) {
+      File fileToCopy = new File(sourcesDirectory, filesPahtsToCopy.first())
       if (fileToCopy.exists()) {
         return [fileToCopy.parentFile, [fileToCopy.getName()]]
       }
     }
-    return [sourcesDirectory, filesToCopy]
+    return [sourcesDirectory, filesPahtsToCopy]
   }
 
   private void doCopy(final File destination, final File sourcesDirectory, final List<String> filesToCopy) {

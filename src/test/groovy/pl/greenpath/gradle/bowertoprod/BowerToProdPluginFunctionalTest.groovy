@@ -28,8 +28,9 @@ class BowerToProdPluginFunctionalTest extends Specification {
     testProjectDir.newFolder('app', 'components', 'almond')
     testProjectDir.newFolder('app', 'components', 'test', 'release')
     testProjectDir.newFile('app/components/almond/bower.json') << getLibBowerJson('["./build/a.js", "build/b.js"]')
-    testProjectDir.newFile('app/components/test/bower.json') << getLibBowerJson('"release/a.js"')
+    testProjectDir.newFile('app/components/test/bower.json') << getLibBowerJson('["release/a.js", "release/a.css"]')
     testProjectDir.newFile('app/components/test/release/a.js') << 'dummy'
+    testProjectDir.newFile('app/components/test/release/a.css') << 'dummy'
     buildFile << '''
         apply plugin: 'pl.greenpath.gradle.bowertoprod'
 
@@ -48,6 +49,7 @@ class BowerToProdPluginFunctionalTest extends Specification {
     fileExists('dest/almond/a.js')
     fileExists('dest/almond/b.js')
     fileExists('dest/test/a.js')
+    fileExists('dest/test/a.css')
   }
 
   def 'should copy files defined to custom destination'() {
@@ -111,6 +113,7 @@ class BowerToProdPluginFunctionalTest extends Specification {
     fileExists('dest/almond/a.js')
     fileExists('dest/almond/b.js')
     fileExists('dest/test/a.js')
+    fileExists('dest/test/a.css')
   }
 
   def 'should not copy dependencies defined as ignored'() {
@@ -128,6 +131,7 @@ class BowerToProdPluginFunctionalTest extends Specification {
     fileExists('dest/almond/a.js')
     fileExists('dest/almond/b.js')
     !fileExists('dest/test/a.js')
+    !fileExists('dest/test/a.css')
   }
 
   private void createAlmodDirectory() {
@@ -147,7 +151,6 @@ class BowerToProdPluginFunctionalTest extends Specification {
   private boolean taskWasUpToDate(BuildResult secondBuild) {
     return secondBuild.task(COPY_TASK_NAME).outcome == TaskOutcome.UP_TO_DATE
   }
-
 
   private boolean deleteCustomDestination() {
     new File(testProjectDir.getRoot(), 'test').deleteDir()

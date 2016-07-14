@@ -2,8 +2,6 @@
 
 [![Build Status](https://travis-ci.org/michalborek/bower-to-prod-gradle-plugin.svg?branch=master)](https://travis-ci.org/michalborek/bower-to-prod-gradle-plugin)
 
-**This plugin is in EARLY ALPHA stage. Use at own risk.**
-
 A gradle plugin that copies only production files of bower dependencis into desired directory.
  
 This plugin uses *.bowerrc* to determine the *bower_components* directory.
